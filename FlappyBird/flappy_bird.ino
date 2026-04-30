@@ -13,9 +13,15 @@ int  pipeGapTop[8];   // -1 = no pipe in that column
 bool gameOver;
 bool started;
 bool lastBtn;
+volatile bool btnFlag = false;
+
+void btnISR() {
+  btnFlag = true;
+}
 
 void setup() {
   pinMode(BTN_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BTN_PIN), btnISR, FALLING);
   lc.shutdown(0, false);
   lc.setIntensity(0, 8);
   lc.clearDisplay(0);
@@ -39,10 +45,11 @@ void resetGame() {
 }
 
 void loop() {
-  bool btn = digitalRead(BTN_PIN);
-  bool pressed = (btn == LOW && lastBtn == HIGH);
-  lastBtn = btn;
-  delay(20);  // debounce
+  bool pressed = false;
+  if (btnFlag) {
+    btnFlag = false;
+    pressed = true;
+  }
 
   if (gameOver) {
     if (pressed) resetGame();
